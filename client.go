@@ -175,14 +175,18 @@ loop:
 			}
 			if rsp == commandSubscribeEvent && tag == 0xffffffff {
 				var s SubscriptionEvent
-				var raw uint32
-				err := bread(buff, uint32Tag, &raw)
+				data := make([]byte, 10)
+				_, err := buff.Read(data)
 				if err != nil {
 					log.Println(err)
 					panic(err)
 				}
+				raw := data[4]
+				index := binary.BigEndian.Uint32(data[6:10])
+
 				s.EventFacility = SubscriptionEventFacility(raw & 0x0F).String()
 				s.EventType = SubscriptionEventType(raw & 0x30).String()
+				s.Index = &index
 				select {
 				case c.Events <- s:
 				default:
