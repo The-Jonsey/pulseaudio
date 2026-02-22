@@ -157,6 +157,34 @@ func (c *Client) GetDefaultSink() (Sink, error) {
 	return Sink{}, errors2.New("Could not get default sink")
 }
 
+func (c *Client) GetSinkByName(name string) (Sink, error) {
+	b, err := c.request(commandGetSinkInfo, stringTag, []byte(name))
+	if err != nil {
+		return Sink{}, err
+	}
+	var sink Sink
+	err = bread(b, &sink)
+	if err != nil {
+		return Sink{}, err
+	}
+	sink.Client = c
+	return Sink{}, nil
+}
+
+func (c *Client) GetSinkByIndex(index uint32) (Sink, error) {
+	b, err := c.request(commandGetSinkInfo, uint32Tag, index)
+	if err != nil {
+		return Sink{}, err
+	}
+	var sink Sink
+	err = bread(b, &sink)
+	if err != nil {
+		return Sink{}, err
+	}
+	sink.Client = c
+	return Sink{}, nil
+}
+
 type sinkPort struct {
 	Name, Description string
 	Pririty           uint32

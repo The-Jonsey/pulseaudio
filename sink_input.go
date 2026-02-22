@@ -1,7 +1,6 @@
 package pulseaudio
 
 import (
-    errors2 "errors"
     "io"
     "math"
     "strings"
@@ -27,7 +26,7 @@ type SinkInput struct {
     HasVolume      bool
     VolumeWritable bool
     Format         formatInfo
-    Client				*Client
+    Client         *Client
 }
 
 // ReadFrom deserializes a sink packet from pulseaudio
@@ -102,15 +101,36 @@ func (c *Client) SinkInputs() ([]SinkInput, error) {
     return sinkInputs, nil
 }
 
-func (c *Client) GetSinkInputByName(name string) (SinkInput, error) {
+func (c *Client) GetSinkInputsByName(name string) ([]SinkInput, error) {
     sinkInputs, err := c.SinkInputs()
     if err != nil {
-        return SinkInput{}, err
+        return []SinkInput{}, err
     }
+    var inputs []SinkInput
     for _, sinkInput := range sinkInputs {
         if strings.ToLower(sinkInput.Name) == strings.ToLower(name) {
-            return sinkInput, nil
+            inputs = append(inputs, sinkInput)
         }
     }
-    return SinkInput{}, errors2.New("Could not get sink input: " + name)
+    return inputs, nil
+}
+
+func (c *Client) GetSinkInputsByProps(props map[string]string) ([]SinkInput, error) {
+    sinkInputs, err := c.SinkInputs()
+    if err != nil {
+        return []SinkInput{}, err
+    }
+    var inputs []SinkInput
+    for _, sinkInput := range sinkInputs {
+        for key, val := range props {
+            inpVal, ok := sinkInput.PropList[key]
+            if ok && strings.ToLower(inpVal) == strings.ToLower(val) {
+                inputs = append(inputs, sinkInput)
+            }
+        }
+        //if strings.ToLower(sinkInput.Name) == strings.ToLower(name) {
+        //    inputs = append(inputs, sinkInput)
+        //}
+    }
+    return inputs, nil
 }

@@ -1,7 +1,6 @@
 package pulseaudio
 
 import (
-    errors2 "errors"
     "io"
     "math"
     "strings"
@@ -102,19 +101,36 @@ func (c *Client) SourceOutputs() ([]SourceOutput, error) {
     return sourceOutputs, nil
 }
 
-func (c *Client) GetSourceOutputByName(name string) (SourceOutput, error) {
+func (c *Client) GetSourceOutputsByName(name string) ([]SourceOutput, error) {
     sourceOutputs, err := c.SourceOutputs()
     if err != nil {
-        return SourceOutput{}, err
+        return []SourceOutput{}, err
     }
-    for _, sourceOutput := range sourceOutputs {
-        sourceName, ok := sourceOutput.PropList["application.name"]
-        if !ok {
-            continue
-        }
-        if strings.ToLower(sourceName) == strings.ToLower(name) {
-            return sourceOutput, nil
+    var outputs []SourceOutput
+    for _, sinkInput := range sourceOutputs {
+        if strings.ToLower(sinkInput.Name) == strings.ToLower(name) {
+            outputs = append(outputs, sinkInput)
         }
     }
-    return SourceOutput{}, errors2.New("Could not get source output: " + name)
+    return outputs, nil
+}
+
+func (c *Client) GetSourceOutputsByProps(props map[string]string) ([]SourceOutput, error) {
+    sourceOutputs, err := c.SourceOutputs()
+    if err != nil {
+        return []SourceOutput{}, err
+    }
+    var inputs []SourceOutput
+    for _, sinkInput := range sourceOutputs {
+        for key, val := range props {
+            inpVal, ok := sinkInput.PropList[key]
+            if ok && strings.ToLower(inpVal) == strings.ToLower(val) {
+                inputs = append(inputs, sinkInput)
+            }
+        }
+        //if strings.ToLower(sinkInput.Name) == strings.ToLower(name) {
+        //    inputs = append(inputs, sinkInput)
+        //}
+    }
+    return inputs, nil
 }
